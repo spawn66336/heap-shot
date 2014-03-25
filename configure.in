@@ -1,0 +1,22 @@
+AC_INIT(heap-shot.sln)
+AM_INIT_AUTOMAKE(heap-shot, 0.2)
+AC_PROG_CC
+
+AC_PATH_PROG(MCS, mcs)
+AC_PATH_PROG(MONO, mono)
+pkglibdir=$prefix/lib/heap-shot
+AC_SUBST(pkglibdir)
+
+AC_CONFIG_FILES([HeapShot/heap-shot],[chmod +x HeapShot/heap-shot])
+AC_CONFIG_FILES([HeapShot.Gui/heap-shot-gui],[chmod +x HeapShot.Gui/heap-shot-gui])
+
+AC_OUTPUT([
+Makefile
+HeapShot.Reader/Makefile
+HeapShot.Gui.Widgets/Makefile
+HeapShot.Gui/Makefile
+HeapShot/Makefile
+MacSetup/Makefile
+])
+
+

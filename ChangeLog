@@ -1,0 +1,157 @@
+
+2010-03-20 Gonzalo Paniagua Javier <gonzalo@novell.com>
+
+	* HeapShot.Gui/SelectProcessDialog.cs:
+	* HeapShot.Gui/gtk-gui/HeapShot.Gui.SelectProcessDialog.cs:
+	* HeapShot.Gui/gtk-gui/gui.stetic: only list processes that have been
+	started with --profile=heap-shot to avoid sudden death and
+	suffocation affecting unaware awesome mono programs running in your
+	desktop.
+
+2010-03-20 Gonzalo Paniagua Javier <gonzalo@novell.com>
+
+	* profiler/heap-shot.c: add a couple of #defines here since
+	mono-mutex.h is not installed any more. Remove warnings.
+	* autogen.sh: remove unused options.
+
+Fri Mar 19 09:24:40 CET 2010 Paolo Molaro <lupus@ximian.com>
+
+	* profiler/heap-shot.c: reorder initialization: first the profiler
+	is installe and after that the event callbacks are registered and
+	activated. Added some notes on the rest of the code.
+	* configure.in: check for mono-2.
+	* HeapShot.Gui/SelectProcessDialog.cs: limit the process list to
+	processes runnig mono.
+
+2008-10-19  Jordi Mas i Hernandez <jordimash@gmail.com>
+
+	* HeapShot.Gui/MainWindow.cs: If the process is no longer valid, ask 
+	the user for a new process instead of hanging.
+
+2008-03-06  Andrew Jorgensen  <ajorgensen@novell.com>
+
+	* HeapShot.Gui.Widgets/Makefile.am: distcheck fixes (reference srcdir
+	for compiled resources)
+
+2007-09-28  Ankit Jain  <jankit@novell.com>
+
+	* profiler/profiler.mdp: Set the compiler regex to gcc.
+
+2007-06-05  Ankit Jain  <jankit@novell.com>
+
+	* HeapShot.Gui/MainWindow.cs: Explicitly Destroy SelectProcessDialog.
+	* HeapShot.Gui/SelectProcessDialog.cs (Dispose): Remove.
+
+2007-04-18  Alp Toker  <alp@atoker.com>
+
+	* HeapShot.Reader/ReferenceNode.cs: Build fix. Old gmcs allowed
+	private generic arguments for a public Dictionary`2 so this wasn't
+	noticed.
+
+2007-02-12  Lluis Sanchez Gual <lluis@novell.com> 
+
+	* profiler/profiler.mdp, profiler/Makefile.am.mdp: Add the correct MD
+	  project file.
+
+2007-02-08  Lluis Sanchez Gual <lluis@novell.com> 
+
+	* profiler/Makefile.am.mdp, heap-shot.mds: Added new profiler project.
+	* profiler/Makefile.am, HeapShot.Gui.Widgets/HeapShot.Gui.Widgets.mdp,
+	  HeapShot.Gui.Widgets/Makefile.am, HeapShot/Makefile.am,
+	  HeapShot/HeapShot.mdp, HeapShot.Reader/Makefile.am,
+	  HeapShot.Reader/HeapShot.Reader.mdp, HeapShot.Gui/Makefile.am,
+	  HeapShot.Gui/HeapShot.Gui.mdp: Synchronized makefiles and
+	  MonoDevelop projects.
+	* HeapShot.Gui.Widgets/gtk-gui/objects.xml,
+	  HeapShot.Gui.Widgets/gtk-gui/gui.stetic: flush.
+	* configure.in: Added package check.
+	* HeapShot.Gui/gtk-gui/generated.cs, HeapShot.Gui/gtk-gui/gui.stetic:
+	  Flush.
+
+2007-01-23  Lluis Sanchez Gual <lluis@novell.com> 
+
+	* HeapShot.Gui.Widgets/HeapShot.Gui.Widgets.mdp,
+	  HeapShot.Gui.Widgets/Makefile.am, HeapShot.Gui/Makefile.am,
+	  HeapShot.Gui/HeapShot.Gui.mdp: Added new files.
+	* HeapShot.Gui.Widgets/ReferenceTreeViewer.cs: Added one new column
+	  that shows the amount of memory indirectly hold by object
+	  references. Show a tooltip in each cell which explains the meaning
+	  of each number.
+	* HeapShot.Gui.Widgets/gtk-gui/generated.cs,
+	  HeapShot.Gui.Widgets/gtk-gui/gui.stetic,
+	  HeapShot.Gui/gtk-gui/generated.cs, HeapShot.Gui/gtk-gui/gui.stetic:
+	  Updated.
+	* HeapShot.Gui.Widgets/gtk-gui/HeapShot.Gui.Widgets.ReferenceTreeViewer.cs,
+	  HeapShot.Gui.Widgets/gtk-gui/HeapShot.Gui.Widgets.ObjectMapViewer.cs,
+	  HeapShot.Gui/gtk-gui/HeapShot.Gui.SelectProcessDialog.cs,
+	  HeapShot.Gui/gtk-gui/MainWindow.cs: New partial classes.
+	* HeapShot.Gui.Widgets/ObjectMapViewer.cs, HeapShot.Gui/MainWindow.cs,
+	  HeapShot.Gui/SelectProcessDialog.cs: Changed to partial class
+	  model.
+	* HeapShot.Reader/ReferenceNode.cs: Added support for a new field:
+	  amount of memory indirectly hold by object references.
+	* HeapShot.Reader/ObjectMapFileReader.cs: Removed fixme.
+
+2006-11-22  Lluis Sanchez Gual <lluis@novell.com> 
+
+	* profiler/outfile-writer.c, profiler/heap-shot.c: Scan the whole type
+	  hierarchy of a type when looking for references.
+	* HeapShot.Gui.Widgets/ReferenceTreeViewer.cs,
+	  HeapShot.Reader/ReferenceNode.cs: Added column which shows the
+	  reference count to the root type being inspected.
+	* HeapShot.Gui.Widgets/gtk-gui/gui.stetic: Updated.
+	* HeapShot.Reader/ObjectMapFileReader.cs: Added GetRoots method, not
+	  used right now.
+
+2006-11-15  Lluis Sanchez Gual  <lluis@novell.com> 
+
+	* HeapShot.Gui.Widgets/ReferenceTreeViewer.cs: Removed debug code.
+	* HeapShot.Reader/ObjectMapFileReader.cs: Fixed object filter when
+	  getting object references. Removed some debug code.
+
+2006-11-13  Joe Shaw  <joeshaw@novell.com>
+
+	* profiler/heap-shot.c (mono_profiler_startup): Fix an
+	off-by-one in counting the length of the name "heap-shot".
+
+2006-11-13  Lluis Sanchez Gual  <lluis@novell.com> 
+
+	* HeapShot/ReferenceTreeReport.cs: Track api changes.
+
+2006-11-13  Lluis Sanchez Gual  <lluis@novell.com>
+
+	* profiler/outfile-writer.h:
+	* profiler/outfile-writer.c: Removed unused constants. Added some
+	  totals in the file headers.
+	
+	* HeapShot.Gui.Widgets/ReferenceTreeViewer.cs: Track api changes.
+	  Load the tree in the background.
+	* HeapShot.Gui.Widgets/gtk-gui/gui.stetic,
+	  HeapShot.Gui.Widgets/gtk-gui/objects.xml: Updated.
+	* HeapShot.Gui.Widgets/gtk-gui/library.dat: Removed from build.
+	* HeapShot.Gui.Widgets/ObjectMapViewer.cs: Track api changes.
+	* configure.in: Fix directory name.
+	* HeapShot/ReferenceTreeReport.cs: Track api changes.
+	
+	* HeapShot.Reader/TypeInfo.cs:
+	* HeapShot.Reader/FieldInfo.cs:
+	* HeapShot.Reader/ObjectInfo.cs:
+	* HeapShot.Reader/ReferenceNode.cs:
+	* HeapShot.Reader/ObjectMapFileReader.cs: Redesigned the way object
+	  information is loaded in memory. It's now using big arrays of structs,
+	  which is much more efficient that reference objects.
+
+2006-11-06  Raja R Harinath  <rharinath@novell.com>
+
+	* configure.in (HeapShot/heap-shot): Separate out output command.
+	Make generated file executable.
+	(HeapShot.Gui/heap-shot-gui): Likewise.
+	* HeapShot/Makefile.am: Remove custom makerule for heap-shot.
+	* HeapShot.Gui/Makefile.am: Remove custom makerule for heap-shot-gui.
+	* HeapShot.Gui.Widgets/Makefile.am (RES_CSFLAGS): New.  Look for
+	resource files in the source directory.
+	($(TARGET)): Use it.  Depend on resource files too.
+
+2006-11-05  Lluis Sanchez Gual  <lluis@novell.com>
+
+	Initial import of heap-shot.

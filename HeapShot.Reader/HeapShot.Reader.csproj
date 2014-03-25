@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B3DF617E-A397-426C-847B-5D3DCEB57E51}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>HeapShot.Reader</RootNamespace>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyName>HeapShot.Reader</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>.</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Execution>
+      <Execution clr-version="Net_2_0" />
+    </Execution>
+    <PlatformTarget>x86</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>.</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Execution>
+      <Execution clr-version="Net_2_0" />
+    </Execution>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FieldInfo.cs" />
+    <Compile Include="ObjectInfo.cs" />
+    <Compile Include="ObjectMapFileReader.cs" />
+    <Compile Include="ObjectReference.cs" />
+    <Compile Include="ReferenceNode.cs" />
+    <Compile Include="TypeInfo.cs" />
+    <Compile Include="Buffer.cs" />
+    <Compile Include="Event.cs" />
+    <Compile Include="EventVisitor.cs" />
+    <Compile Include="LogBuffer.cs" />
+    <Compile Include="Util.cs" />
+    <Compile Include="Header.cs" />
+    <Compile Include="Graph.cs" />
+    <Compile Include="IProgressListener.cs" />
+    <Compile Include="HeapSnapshot.cs" />
+    <Compile Include="HeapShotEventArgs.cs" />
+    <Compile Include="LogFileReader.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MonoProfilerReaderBridge">
+      <HintPath>..\..\mprof_readtest\Debug\MonoProfilerReaderBridge.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <MonoDevelop.Autotools.MakefileInfo RelativeMakefileName="./Makefile.am" SyncReferences="true" IsAutotoolsProject="true" RelativeConfigureInPath="../">
+          <BuildFilesVar Sync="true" Name="CSFILES" />
+          <DeployFilesVar />
+          <ResourcesVar />
+          <OthersVar />
+          <GacRefVar Name="REFS" Prefix="-r:" />
+          <AsmRefVar Name="REFS" Prefix="-r:" />
+          <ProjectRefVar Name="REFS" Prefix="-r:" />
+        </MonoDevelop.Autotools.MakefileInfo>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+</Project>
