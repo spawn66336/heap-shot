@@ -165,8 +165,43 @@ namespace HeapShot.Reader {
             progress.ReportProgress("正在加载..." + this.name, 0.0);
             MonoProfilerReaderBridge.HeapShot heapShot =  mgr.CreateHeapShotFromFile(this.name);
            
+            //用来集结类信息的查找表
+            Hashtable classMap = new Hashtable(); 
+            for (uint i = 0; i < heapShot.GetHeapDataCount(); i++)
+            {
+                MonoProfilerReaderBridge.HeapData heapData = heapShot.GetHeapDataByIndex(i);
 
-            Hashtable classMap = new Hashtable();
+                //对每个HeapData的Object进行遍历
+                MonoProfilerReaderBridge.ObjectInfo obj = null;
+                heapData.MoveFirstObject();
+                while ((obj = heapData.GetCurrObject()) != null)
+                {
+                    if (!classMap.ContainsKey(obj.GetClassID()))
+                    {
+                        classMap[obj.GetClassID()] = heapShot.GetClassInfoByID(obj.GetClassID());
+                    }
+                    heapData.MoveNextObject();
+                }
+            }
+
+            List<TypeInfo> typeList = new List<TypeInfo>();
+            IDictionaryEnumerator classEnum = classMap.GetEnumerator();
+            classEnum.Reset();
+            while (classEnum.MoveNext())
+            {
+                DictionaryEntry dentry;
+                dentry = (DictionaryEntry)classEnum.Current;
+
+                MonoProfilerReaderBridge.ClassInfo classInfo = (MonoProfilerReaderBridge.ClassInfo)dentry.Value;
+                TypeInfo ti = new TypeInfo();
+                ti.Code = classInfo.GetID();
+                ti.Name = classInfo.GetName();
+                ti.FieldsIndex = currentData.FieldCodes.Count;
+                ti.FieldsCount = 0;
+                typeList.Add(ti);
+            }
+
+
 
             for (uint i = 0; i < heapShot.GetHeapDataCount(); i++ )
             {
@@ -182,7 +217,7 @@ namespace HeapShot.Reader {
                         classMap[obj.GetClassID()] = heapShot.GetClassInfoByID(obj.GetClassID());
                     }
 
-                    ObjectInfo ob = new ObjectInfo();
+                    ObjectInfo ob = new ObjectInfo(); 
                     ob.Code = obj.GetID();
                     ob.Size = obj.GetSize();
                     ob.RefsIndex = currentData.ReferenceCodes.Count;
@@ -199,26 +234,11 @@ namespace HeapShot.Reader {
                     }
                     currentData.ObjectsList.Add(ob);
 
-                    heapData.MoveNextObject();
-
-                   
+                    heapData.MoveNextObject(); 
                 }
 
-                IDictionaryEnumerator classEnum =  classMap.GetEnumerator();
-                classEnum.Reset();
-                while(classEnum.MoveNext())
-                {
-                    DictionaryEntry dentry;
-                    dentry = (DictionaryEntry)classEnum.Current;
-
-                    MonoProfilerReaderBridge.ClassInfo classInfo = (MonoProfilerReaderBridge.ClassInfo)dentry.Value;
-                    TypeInfo ti = new TypeInfo();
-                    ti.Code = classInfo.GetID();
-                    ti.Name = classInfo.GetName();
-                    ti.FieldsIndex = currentData.FieldCodes.Count; 
-                    ti.FieldsCount = 0;
-                    currentData.TypesList.Add(ti);
-                }
+                currentData.TypesList.Clear();
+                currentData.TypesList.AddRange(typeList);
 
                 HeapSnapshot shot = new HeapSnapshot();
                 shotCount++;

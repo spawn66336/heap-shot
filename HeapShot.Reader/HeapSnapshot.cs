@@ -502,13 +502,14 @@ namespace HeapShot.Reader {
 			dif.totalMemory = newMap.totalMemory;
 			dif.typeIndices = newMap.typeIndices;
 			dif.types = newMap.types;
-			dif.RemoveData (oldMap);
+			//dif.RemoveData (oldMap);
+            dif.CompareData(oldMap);
 			dif.name = string.Format ("Diff from {0} to {1}", oldMap.Name, newMap.Name);
 			return dif;
 		}
 		
 		public void RemoveData (HeapSnapshot otherShot)
-		{
+		{ 
 			types = (TypeInfo[]) types.Clone ();
 			filteredObjects = new bool [objects.Length];
 			for (int n=0; n<otherShot.objects.Length; n++) {
@@ -518,13 +519,90 @@ namespace HeapShot.Reader {
 				if (i >= 0) {
 					filteredObjects [i] = true;
 					long t = objects[i].Type;
-					types [t].ObjectCount--;
+					types [t].ObjectCount--; 
 					//types [t].TotalSize -= objects[i].Size;
 					filteredCount++;
 					//this.totalMemory -= objects[i].Size;
 				}
 			}
 		}
+
+        public void CompareData( HeapSnapshot otherShot )
+        { 
+            
+            
+            //计算最终每个类的对象实例数
+            types = (TypeInfo[])types.Clone();
+            for (int i = 0; i < types.Length; i++ )
+            {
+                if( otherShot.types[i].ObjectCount >= types[i].ObjectCount )
+                {
+                    types[i].ObjectCount = 0;
+                }
+                else
+                {
+                    types[i].ObjectCount -= otherShot.types[i].ObjectCount;
+                }
+            }
+ 
+            //移除掉两次快照数量没有差别的所有对象
+            filteredObjects = new bool[objects.Length]; 
+            for (int i = 0; i < objects.Length; i++)
+            {
+                if( types[objects[i].Type].ObjectCount == 0 )
+                {
+                    filteredObjects[i] = true;
+                    filteredCount++; 
+                }
+            }
+
+            //移除在otherShot中存在同时在当前HeapShot也存在的对象
+            for (int n = 0; n < otherShot.objects.Length; n++)
+            {
+                int i = Array.BinarySearch(objectCodes, otherShot.objects[n].Code); 
+                if (i >= 0 && 
+                    filteredObjects[i] == false &&
+                    objects[i].Type == otherShot.objects[n].Type
+                    )
+                {  
+                    filteredObjects[i] = true;
+                    filteredCount++; 
+                } 
+            }
+             
+
+            for (int t = 0; t < types.Length; t++)
+            {
+                if( types[t].ObjectCount == 0)
+                    continue;
+
+                List<int> aliveObjIndices = new List<int>();
+                for (int i = 0; i < objects.Length; i++)
+                { 
+                    if( objects[i].Type == t  && filteredObjects[i] == false)
+                    {
+                        aliveObjIndices.Add(i);
+                    }
+                }
+
+                if( aliveObjIndices.Count > types[t].ObjectCount )
+                {
+                    int needDelCount = aliveObjIndices.Count - (int)(types[t].ObjectCount);
+                    
+                    for( int j = 0 ;  j<needDelCount ; j++)
+                    {
+                        filteredObjects[aliveObjIndices[j]] = true;
+                        filteredCount++;
+                    }
+                }
+                else if (aliveObjIndices.Count < types[t].ObjectCount)
+                {//不可能出现这种状况
+                    System.Console.WriteLine(
+                        "aliveObjIndices.Count < types[t].ObjectCount aliveObjIndices.Count=%d, types[t].ObjectCount=%d", 
+                        aliveObjIndices.Count, types[t].ObjectCount);
+                }
+            }
+        }
 		
 		public IEnumerable<int> GetReferencers (int obj)
 		{
