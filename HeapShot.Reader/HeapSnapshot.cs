@@ -528,8 +528,7 @@ namespace HeapShot.Reader {
 		}
 
         public void CompareData( HeapSnapshot otherShot )
-        { 
-            
+        {  
             
             //计算最终每个类的对象实例数
             types = (TypeInfo[])types.Clone();
@@ -551,6 +550,7 @@ namespace HeapShot.Reader {
             {
                 if( types[objects[i].Type].ObjectCount == 0 )
                 {
+                    totalMemory -= objects[i].Size;
                     filteredObjects[i] = true;
                     filteredCount++; 
                 }
@@ -564,7 +564,8 @@ namespace HeapShot.Reader {
                     filteredObjects[i] == false &&
                     objects[i].Type == otherShot.objects[n].Type
                     )
-                {  
+                {
+                    totalMemory -= objects[i].Size;
                     filteredObjects[i] = true;
                     filteredCount++; 
                 } 
@@ -591,6 +592,7 @@ namespace HeapShot.Reader {
                     
                     for( int j = 0 ;  j<needDelCount ; j++)
                     {
+                        totalMemory -= objects[aliveObjIndices[j]].Size;
                         filteredObjects[aliveObjIndices[j]] = true;
                         filteredCount++;
                     }

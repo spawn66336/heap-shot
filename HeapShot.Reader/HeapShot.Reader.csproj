@@ -11,7 +11,7 @@
     <ApplicationIcon>
     </ApplicationIcon>
     <AssemblyName>HeapShot.Reader</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -62,8 +62,9 @@
     <Compile Include="LogFileReader.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="MonoProfilerReaderBridge">
-      <HintPath>..\..\mprof_readtest\Debug\MonoProfilerReaderBridge.dll</HintPath>
+    <Reference Include="MonoProfilerReaderBridge, Version=1.0.5199.25313, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\mprof_readtest\Release\MonoProfilerReaderBridge.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
