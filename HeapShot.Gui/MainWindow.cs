@@ -32,6 +32,7 @@ using HeapShot.Reader;
 using System.Diagnostics;
 using System.Threading;
 using IgeMacIntegration;
+using Microsoft.Win32;
 
 public partial class MainWindow: Gtk.Window
 {
@@ -224,6 +225,29 @@ public partial class MainWindow: Gtk.Window
 			new FileChooserDialog ("Open Object Map File", null, FileChooserAction.Open,
 					       Gtk.Stock.Cancel, Gtk.ResponseType.Cancel,
 					       Gtk.Stock.Open, Gtk.ResponseType.Ok);
+
+		RegistryKey currUserKey = Microsoft.Win32.Registry.CurrentUser; 
+        try{
+
+            RegistryKey unityKey = currUserKey.OpenSubKey("Software\\Unity Technologies\\Unity Editor 3.x\\Location");
+            if( unityKey != null ) 
+            {
+                object val = unityKey.GetValue("");
+                if( val != null )
+                {
+                    string editorPath = val.ToString();
+                    string editorDir = editorPath.Substring(0, editorPath.LastIndexOf('\\')+1);
+                    editorDir += "Data\\PlaybackEngines\\";
+                    lastFolder = editorDir;
+                    Console.WriteLine(editorDir);
+                }
+            }else{
+                Console.WriteLine("无法找到Unity安装目录！");
+            }  
+        }finally{
+            currUserKey.Close();
+        }
+
 					       
 		if (lastFolder != null)
 			dialog.SetCurrentFolder (lastFolder);
@@ -237,7 +261,7 @@ public partial class MainWindow: Gtk.Window
 			}
 		} finally {
 			dialog.Destroy ();
-		}
+		} 
 	}
 
 	protected virtual void OnQuitActivated(object sender, System.EventArgs e)
