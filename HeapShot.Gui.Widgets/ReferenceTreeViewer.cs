@@ -252,19 +252,19 @@ namespace HeapShot.Gui.Widgets
 			ReferenceNode node;
 			cancelled = false;
 			
-			if (checkPurge.Active) {
-				ProgressDialog dlg = new ProgressDialog ((Gtk.Window) this.Toplevel, false);
-				dlg.Show ();
-				while (Gtk.Application.EventsPending ())
-					Gtk.Application.RunIteration ();
-				node = file.GetRootReferenceTree (dlg, type);
-				cancelled = dlg.Cancelled;
-				dlg.Destroy ();
-				if (node == null)
-					return TreeIter.Zero;
-			}
-			else
-				node = file.GetReferenceTree (type, checkInverse.Active);
+//			if (checkPurge.Active) {
+//				ProgressDialog dlg = new ProgressDialog ((Gtk.Window) this.Toplevel, false);
+//				dlg.Show ();
+//				while (Gtk.Application.EventsPending ())
+//					Gtk.Application.RunIteration ();
+//				node = file.GetRootReferenceTree (dlg, type);
+//				cancelled = dlg.Cancelled;
+//				dlg.Destroy ();
+//				if (node == null)
+//					return TreeIter.Zero;
+//			}
+//			else
+			node = file.GetReferenceTree (type, checkInverse.Active);
 			return AddNode (TreeIter.Zero, node);
 		}
 		
@@ -339,7 +339,7 @@ namespace HeapShot.Gui.Widgets
 		
 		protected virtual void OnCheckInverseClicked(object sender, System.EventArgs e)
 		{
-			checkPurge.Sensitive = checkInverse.Active;
+			//checkPurge.Sensitive = checkInverse.Active;
 			Refill ();
 		}
 

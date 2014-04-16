@@ -20,7 +20,7 @@ public partial class MainWindow
 	private global::HeapShot.Gui.Widgets.ObjectMapViewer viewer;
 	private global::Gtk.Statusbar statusbar1;
 	private global::Gtk.Label statusBarFileName;
-	
+
 	protected virtual void Build ()
 	{
 		global::Stetic.Gui.Initialize (this);
@@ -66,7 +66,9 @@ public partial class MainWindow
 		this.vbox1 = new global::Gtk.VBox ();
 		this.vbox1.Name = "vbox1";
 		// Container child vbox1.Gtk.Box+BoxChild
-		this.UIManager.AddUiFromString ("<ui><menubar name='menubar1'><menu name='FileAction1' action='FileAction1'><menuitem name='open' action='open'/><separator/><menuitem name='quit' action='quit'/></menu><menu name='ProfileAction' action='ProfileAction'><menuitem name='executeAction' action='executeAction'/><menuitem name='stopAction' action='stopAction'/><separator/><menuitem name='ForceHeapSnapshotAction' action='ForceHeapSnapshotAction'/><menuitem name='LoadHeapSnapshotsAction' action='LoadHeapSnapshotsAction'/></menu><menu/></menubar></ui>");
+		this.UIManager.AddUiFromString ("<ui><menubar name=\'menubar1\'><menu name=\'FileAction1\' action=\'FileAction1\'><menui" +
+		"tem name=\'open\' action=\'open\'/><separator/><menuitem name=\'quit\' action=\'quit\'/>" +
+		"</menu><menu/></menubar></ui>");
 		this.menubar1 = ((global::Gtk.MenuBar)(this.UIManager.GetWidget ("/menubar1")));
 		this.menubar1.Name = "menubar1";
 		this.vbox1.Add (this.menubar1);
@@ -75,7 +77,8 @@ public partial class MainWindow
 		w2.Expand = false;
 		w2.Fill = false;
 		// Container child vbox1.Gtk.Box+BoxChild
-		this.UIManager.AddUiFromString ("<ui><toolbar name='toolbar1'><toolitem name='open' action='open'/><separator/><toolitem name='executeAction' action='executeAction'/><toolitem name='stopAction' action='stopAction'/><toolitem name='ForceHeapSnapshotAction' action='ForceHeapSnapshotAction'/></toolbar></ui>");
+		this.UIManager.AddUiFromString ("<ui><toolbar name=\'toolbar1\'><toolitem name=\'open\' action=\'open\'/></toolbar></ui>" +
+		"");
 		this.toolbar1 = ((global::Gtk.Toolbar)(this.UIManager.GetWidget ("/toolbar1")));
 		this.toolbar1.Name = "toolbar1";
 		this.toolbar1.ShowArrow = false;

@@ -93,13 +93,6 @@
                 <node type="Separator" />
                 <node type="Menuitem" action="quit" />
               </node>
-              <node type="Menu" action="ProfileAction">
-                <node type="Menuitem" action="executeAction" />
-                <node type="Menuitem" action="stopAction" />
-                <node type="Separator" />
-                <node type="Menuitem" action="ForceHeapSnapshotAction" />
-                <node type="Menuitem" action="LoadHeapSnapshotsAction" />
-              </node>
               <node type="Menu" />
             </node>
           </widget>
@@ -118,10 +111,6 @@
             <property name="IconSize">LargeToolbar</property>
             <node name="toolbar1" type="Toolbar">
               <node type="Toolitem" action="open" />
-              <node type="Separator" />
-              <node type="Toolitem" action="executeAction" />
-              <node type="Toolitem" action="stopAction" />
-              <node type="Toolitem" action="ForceHeapSnapshotAction" />
             </node>
           </widget>
           <packing>
