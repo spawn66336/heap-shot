@@ -51,7 +51,7 @@ namespace HeapShot.Gui.Widgets
 			this.notebook = new global::Gtk.Notebook ();
 			this.notebook.CanFocus = true;
 			this.notebook.Name = "notebook";
-			this.notebook.CurrentPage = 0;
+			this.notebook.CurrentPage = 1;
 			this.notebook.Scrollable = true;
 			// Container child notebook.Gtk.Notebook+NotebookChild
 			this.table1 = new global::Gtk.Table (((uint)(3)), ((uint)(2)), false);

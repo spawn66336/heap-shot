@@ -184,6 +184,7 @@ namespace HeapShot.Reader {
                 }
             }
 
+            //将类信息装进HeapShotData中
             List<TypeInfo> typeList = new List<TypeInfo>();
             IDictionaryEnumerator classEnum = classMap.GetEnumerator();
             classEnum.Reset();
@@ -242,7 +243,12 @@ namespace HeapShot.Reader {
 
                 HeapSnapshot shot = new HeapSnapshot();
                 shotCount++;
-                shot.Build(shotCount.ToString(), currentData);
+                shot.name = shotCount.ToString();
+                //若当前HeapData已经载入
+                if (heapData.IsLoaded())
+                {
+                    shot.Build(shotCount.ToString(), currentData);
+                }
                 AddShot(shot);
 
                 currentData.ResetHeapData();

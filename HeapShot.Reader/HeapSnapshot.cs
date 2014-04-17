@@ -32,7 +32,7 @@ namespace HeapShot.Reader {
 
 	public class HeapSnapshot 
 	{
-		string name;
+		public string name;
 		DateTime timestamp;
 		ulong totalMemory;
 		
@@ -46,6 +46,8 @@ namespace HeapShot.Reader {
 		bool[] filteredObjects;
 		int filteredCount;
 		long[] objectCodes;
+
+        bool isbuild = false; //是否已经构建
 		
 /*
 		 * Here is a visual example of how tables are filled:
@@ -95,24 +97,40 @@ namespace HeapShot.Reader {
 */
 		
 		public HeapSnapshot ()
-		{
+		{ 
 		}
 		
-		public string Name {
+		public string Name 
+        {
 			get { return name; }
 		}
 		
-		public DateTime Timestamp {
+		public DateTime Timestamp 
+        {
 			get { return timestamp; }
 		}
 		
-		public ulong TotalMemory {
+		public ulong TotalMemory 
+        {
 			get { return totalMemory; }
 		}
 		
-		public uint NumObjects {
-			get { return (uint) (objects.Length - filteredCount); }
+		public uint NumObjects 
+        {
+			get {
+                if (objects == null)
+                    return 0;
+                return (uint) (objects.Length - filteredCount); 
+            }
 		}
+
+        public bool IsBuild
+        {
+            get
+            {
+                return isbuild;
+            }
+        }
 		
 		//
 		// Code to read the log files generated at runtime
@@ -121,10 +139,12 @@ namespace HeapShot.Reader {
 		HashSet<long> types_not_found = new HashSet<long> ();
 		internal void Build (string name, HeapShotData data)
 		{
+            if (IsBuild)
+                return;
+
 			this.name = name;
 			
-			// Build an array of type indices and sort it
-			
+			// Build an array of type indices and sort it 
 			types = data.TypesList.ToArray ();
 			TypeComparer typeComparer = new TypeComparer ();
 			typeComparer.types = types;
@@ -207,9 +227,11 @@ namespace HeapShot.Reader {
 			// Also calculate the number of inverse references for each object
 			references = new int [mergedReferenceCodes.Length];
 			
-			for (int n=0; n<mergedReferenceCodes.Length; n++) {
+			for (int n=0; n<mergedReferenceCodes.Length; n++) 
+            {
 				int i = Array.BinarySearch (objectCodes, mergedReferenceCodes[n]);
-				if (i >= 0) {
+				if (i >= 0) 
+                {
 					references[n] = i;
 					objects [i].InverseRefsCount++;
 				} else {
@@ -225,7 +247,8 @@ namespace HeapShot.Reader {
 			
 			int[] invPositions = new int [objects.Length];	// Temporary array to hold reference positions
 			int rp = 0;
-			for (int n=0; n<objects.Length; n++) {
+			for (int n=0; n<objects.Length; n++) 
+            {
 				objects [n].InverseRefsIndex = rp;
 				invPositions [n] = rp;
 				rp += objects [n].InverseRefsCount;
@@ -237,7 +260,8 @@ namespace HeapShot.Reader {
 			inverseRefs = new int [mergedReferenceCodes.Length];
 			fieldReferences = new int [mergedReferenceCodes.Length];
 			
-			for (int ob=0; ob < objects.Length; ob++) {
+			for (int ob=0; ob < objects.Length; ob++) 
+            {
 				long t = objects [ob].Type;
 				int fi = types [t].FieldsIndex;
 				int nf = fi + types [t].FieldsCount;
@@ -263,6 +287,9 @@ namespace HeapShot.Reader {
                     //}
 				}
 			}
+
+            //构建完成标志位置位
+            isbuild = true;
 		}
 		
 		class RefComparer: IComparer <int> {
