@@ -257,8 +257,8 @@ namespace HeapShot.Reader {
                 progress.ReportProgress("ππΩ®∂—øÏ’’...", prog);
             }//for (uint i = 0; i < heapShot.GetHeapDataCount(); i++ )
 
-
-                mgr = null; 
+            mgr.Dispose();
+            mgr = null; 
 		}
 
 		private void ReadLogFileChunk_Type (MetadataEvent t)

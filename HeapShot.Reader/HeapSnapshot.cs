@@ -144,7 +144,10 @@ namespace HeapShot.Reader {
 
 			this.name = name;
 			
-			// Build an array of type indices and sort it 
+			//构建索引数组，并按TypeID来排序，这样
+            //得到一个类型索引，每个索引索引一个
+            //types中的类型，这样最终的typeIndices
+            //形成了一个按类型ID升序排序的列表
 			types = data.TypesList.ToArray ();
 			TypeComparer typeComparer = new TypeComparer ();
 			typeComparer.types = types;
@@ -153,28 +156,32 @@ namespace HeapShot.Reader {
 			for (int n=0; n < types.Length; n++)
 				typeIndices [n] = n;
 			Array.Sort<int> (typeIndices, typeComparer);
-			// Sorted array of codes needed for the binary search
+
+
+			//根据之前生成的typeIndices可以构建一个升序
+            //的类型ID列表
 			long[] typeCodes = new long [types.Length];	
 			for (int n=0; n < types.Length; n++) {
 				typeCodes [n] = types [typeIndices[n]].Code;
 			}
 			
-			// Build an array of object indices and sort it
-			
+            
+            //与上面的typeCodes构建思路相同，最终形成了一个
+            //按ObjectId升序排序的objectCodes列表
 			RefComparer objectComparer = new RefComparer ();
 			objectComparer.objects = data.ObjectsList;
 			
 			int[] objectIndices = new int [data.ObjectsList.Count];
 			for (int n=0; n < data.ObjectsList.Count; n++)
 				objectIndices [n] = n;
-			Array.Sort<int> (objectIndices, objectComparer);
-			// Sorted array of codes needed for the reordering and binary search
+			Array.Sort<int> (objectIndices, objectComparer); 
 			objectCodes = new long [data.ObjectsList.Count];	
 			for (int n=0; n < data.ObjectsList.Count; n++)
 				objectCodes [n] = data.ObjectsList [objectIndices[n]].Code;
 			
-			// Merge duplicates
 			
+            //合并重复的对象，并统计每个类型对象数，最后形成的mergedObjects列表
+            //即是没有重复的对象信息列表
 			long[] mergedObjectCodes = new long [data.RealObjectCount];
 			ObjectInfo[] mergedObjects = new ObjectInfo [data.RealObjectCount];
 			long[] mergedReferenceCodes = new long [data.ReferenceCodes.Count];
@@ -183,9 +190,11 @@ namespace HeapShot.Reader {
 			int mergedObjectPos = -1;
 			int mergedRefPos = 0;
 			
-			for (int n=0; n<objectCodes.Length; n++) {
+			for (int n=0; n<objectCodes.Length; n++) 
+            {
 				ObjectInfo ob = data.ObjectsList [objectIndices[n]];
-				if (n == 0 || objectCodes [n] != last) {
+				if (n == 0 || objectCodes [n] != last) 
+                {
 					last = objectCodes [n];
 					mergedObjectPos++;
 					mergedObjects [mergedObjectPos] = ob;
@@ -193,9 +202,10 @@ namespace HeapShot.Reader {
 					mergedObjects [mergedObjectPos].RefsCount = 0; // Refs are being added below
 					mergedObjectCodes [mergedObjectPos] = mergedObjects [mergedObjectPos].Code;
 
-					// Find the type index
+					//查找对象所对应的类型并增加其此种类型的引用计数
 					int i = Array.BinarySearch<long> (typeCodes, data.ObjectTypeCodes [objectIndices[n]]);
-					if (i >= 0) {
+					if (i >= 0) 
+                    {
 						i = typeIndices [i];
 						mergedObjects [mergedObjectPos].Type = i;
 						types [i].ObjectCount++;
@@ -203,15 +213,22 @@ namespace HeapShot.Reader {
 					} else {
 						mergedObjects [mergedObjectPos].Type = 0;
 						long type_not_found = data.ObjectTypeCodes [objectIndices [n]];
-						if (!types_not_found.Contains (type_not_found)) {
+						if (!types_not_found.Contains (type_not_found)) 
+                        {
 							types_not_found.Add (type_not_found);
 							Console.WriteLine ("Type not found: " + type_not_found);
 						}
 					}
-				}
+                }
+                else
+                {
+                    Console.WriteLine("出现重复的Object!");
+                }
+
 				int baseRefIndex = ob.RefsIndex;
 				int refsCount = ob.RefsCount;
-				for (int r = baseRefIndex; r < baseRefIndex + refsCount; r++, mergedRefPos++) {
+				for (int r = baseRefIndex; r < baseRefIndex + refsCount; r++, mergedRefPos++) 
+                {
 					mergedReferenceCodes [mergedRefPos] = data.ReferenceCodes [r];
 					//mergedFieldReferenceCodes [mergedRefPos] = data.FieldReferenceCodes [r];
 				}
@@ -222,13 +239,13 @@ namespace HeapShot.Reader {
 			objects = mergedObjects;
 			objectCodes = mergedObjectCodes;
 			int missingRefs = 0;
-			
-			// Build the array of referenceCodes, but using indexes
-			// Also calculate the number of inverse references for each object
+			 
+            //构建引用对象的索引列表(references)，并统计各对象的反向引用数量
 			references = new int [mergedReferenceCodes.Length];
 			
 			for (int n=0; n<mergedReferenceCodes.Length; n++) 
             {
+                //查找引用对象所对应的对象索引
 				int i = Array.BinarySearch (objectCodes, mergedReferenceCodes[n]);
 				if (i >= 0) 
                 {
@@ -243,9 +260,9 @@ namespace HeapShot.Reader {
 			
 			Console.WriteLine ("pp Missing references: " + missingRefs + " of " + mergedReferenceCodes.Length);
 			
-			// Calculate the array index of inverse referenceCodes for each object
-			
-			int[] invPositions = new int [objects.Length];	// Temporary array to hold reference positions
+			 
+            //计算每个对象的反向引用数量，将其记录在invPositions临时数组中
+			int[] invPositions = new int [objects.Length];	 
 			int rp = 0;
 			for (int n=0; n<objects.Length; n++) 
             {
@@ -263,13 +280,16 @@ namespace HeapShot.Reader {
 			for (int ob=0; ob < objects.Length; ob++) 
             {
 				long t = objects [ob].Type;
-				int fi = types [t].FieldsIndex;
-				int nf = fi + types [t].FieldsCount;
+                //int fi = types [t].FieldsIndex;
+                //int nf = fi + types [t].FieldsCount;
+
 				int sr = objects [ob].RefsIndex;
 				int er = sr + objects [ob].RefsCount;
-				for (; sr<er; sr++) {
+				for (; sr<er; sr++) 
+                {
 					int i = references [sr];
-					if (i != -1) {
+					if (i != -1) 
+                    {
 						inverseRefs [invPositions [i]] = ob;
 						invPositions [i]++;
 					}
