@@ -109,8 +109,14 @@ public partial class MainWindow: Gtk.Window
 			} catch {}
 			outfile = null;
 		}
+
+        //清空数据
 		viewer.Clear ();
+        //清空HeapShotMgr中的所有数据
+        ObjectMapReader.ClearAllHeapShotData();
 		viewer.Sensitive = false;
+
+        GC.Collect();
 	}
 	
 	public void OpenFiles (IDictionary<string, int> files)

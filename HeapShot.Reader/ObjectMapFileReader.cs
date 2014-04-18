@@ -35,6 +35,13 @@ namespace HeapShot.Reader {
 	public class ObjectMapReader: IDisposable
 	{
 		const string log_file_label = "heap-shot logfile";
+
+        public static MonoProfilerReaderBridge.ProfilerHeapShotManager g_heapShotMgr = null;
+
+        public static void ClearAllHeapShotData()
+        {
+            g_heapShotMgr.Clear();
+        }
 		
 		string name;
 		LogFileReader reader;
@@ -61,6 +68,11 @@ namespace HeapShot.Reader {
 		List<HeapSnapshot> shots = new List<HeapSnapshot> ();
 		
 		public event EventHandler<HeapShotEventArgs> HeapSnapshotAdded;
+
+        static ObjectMapReader()
+        {
+            g_heapShotMgr = new MonoProfilerReaderBridge.ProfilerHeapShotManager();
+        }
 		
 		internal ObjectMapReader ()
 		{
@@ -158,107 +170,24 @@ namespace HeapShot.Reader {
 		// Code to read the log files generated at runtime
 		//
 		private void ReadLogFile (IProgressListener progress)
-		{
-
-            MonoProfilerReaderBridge.ProfilerHeapShotManager mgr = new MonoProfilerReaderBridge.ProfilerHeapShotManager();
-
+		{ 
             progress.ReportProgress("正在加载..." + this.name, 0.0);
-            MonoProfilerReaderBridge.HeapShot heapShot =  mgr.CreateHeapShotFromFile(this.name);
-           
-            //用来集结类信息的查找表
-            Hashtable classMap = new Hashtable(); 
-            for (uint i = 0; i < heapShot.GetHeapDataCount(); i++)
+            MonoProfilerReaderBridge.HeapShot heapShot = g_heapShotMgr.CreateHeapShotFromFile(this.name);
+
+            for (int i = 0; i < (int)heapShot.GetHeapDataCount(); i++)
             {
-                MonoProfilerReaderBridge.HeapData heapData = heapShot.GetHeapDataByIndex(i);
-
-                //对每个HeapData的Object进行遍历
-                MonoProfilerReaderBridge.ObjectInfo obj = null;
-                heapData.MoveFirstObject();
-                while ((obj = heapData.GetCurrObject()) != null)
-                {
-                    if (!classMap.ContainsKey(obj.GetClassID()))
-                    {
-                        classMap[obj.GetClassID()] = heapShot.GetClassInfoByID(obj.GetClassID());
-                    }
-                    heapData.MoveNextObject();
-                }
-            }
-
-            //将类信息装进HeapShotData中
-            List<TypeInfo> typeList = new List<TypeInfo>();
-            IDictionaryEnumerator classEnum = classMap.GetEnumerator();
-            classEnum.Reset();
-            while (classEnum.MoveNext())
-            {
-                DictionaryEntry dentry;
-                dentry = (DictionaryEntry)classEnum.Current;
-
-                MonoProfilerReaderBridge.ClassInfo classInfo = (MonoProfilerReaderBridge.ClassInfo)dentry.Value;
-                TypeInfo ti = new TypeInfo();
-                ti.Code = classInfo.GetID();
-                ti.Name = classInfo.GetName();
-                ti.FieldsIndex = currentData.FieldCodes.Count;
-                ti.FieldsCount = 0;
-                typeList.Add(ti);
-            }
-
-
-
-            for (uint i = 0; i < heapShot.GetHeapDataCount(); i++ )
-            {
-                MonoProfilerReaderBridge.HeapData heapData = heapShot.GetHeapDataByIndex(i);
-
-                //对每个HeapData的Object进行遍历
-                MonoProfilerReaderBridge.ObjectInfo obj = null;
-                heapData.MoveFirstObject();
-                while( ( obj = heapData.GetCurrObject() ) != null )
-                {
-                    if( !classMap.ContainsKey( obj.GetClassID() ) )
-                    {
-                        classMap[obj.GetClassID()] = heapShot.GetClassInfoByID(obj.GetClassID());
-                    }
-
-                    ObjectInfo ob = new ObjectInfo(); 
-                    ob.Code = obj.GetID();
-                    ob.Size = obj.GetSize();
-                    ob.RefsIndex = currentData.ReferenceCodes.Count;
-                    ob.RefsCount = (int)obj.GetRefObjCount();
-                    currentData.ObjectTypeCodes.Add( obj.GetClassID());
-                    totalMemory += ob.Size;
-                    if (ob.Size != 0)
-                        currentData.RealObjectCount++;
-
-                    // Read referenceCodes 
-                    for (uint n = 0; n < ob.RefsCount; n++)
-                    {
-                        currentData.ReferenceCodes.Add((long)obj.GetRefObjIDByIndex(n)); 
-                    }
-                    currentData.ObjectsList.Add(ob);
-
-                    heapData.MoveNextObject(); 
-                }
-
-                currentData.TypesList.Clear();
-                currentData.TypesList.AddRange(typeList);
-
+                //只创建快照对象，不填充内容
                 HeapSnapshot shot = new HeapSnapshot();
                 shotCount++;
                 shot.name = shotCount.ToString();
-                //若当前HeapData已经载入
-                if (heapData.IsLoaded())
-                {
-                    shot.Build(shotCount.ToString(), currentData);
-                }
-                AddShot(shot);
 
-                currentData.ResetHeapData();
+                shot.heapDataId = i;
+                shot.heapShot = heapShot;
+                AddShot(shot);
 
                 double prog = ((double)i) / ((double)heapShot.GetHeapDataCount());
                 progress.ReportProgress("构建堆快照...", prog);
-            }//for (uint i = 0; i < heapShot.GetHeapDataCount(); i++ )
-
-            mgr.Dispose();
-            mgr = null; 
+            } 
 		}
 
 		private void ReadLogFileChunk_Type (MetadataEvent t)
@@ -292,61 +221,61 @@ namespace HeapShot.Reader {
 		
 		private void ReadLogFileChunk_Object (HeapEvent he)
 		{
-			if (he.Type == HeapEvent.EventType.Start) {
-				//Console.WriteLine ("ppe: START");
-				return;
-			}
-			else if (he.Type == HeapEvent.EventType.End) {
-				//Console.WriteLine ("ppe: END");
-				HeapSnapshot shot = new HeapSnapshot ();
-				shotCount++;
-				shot.Build (shotCount.ToString (), currentData);
-				AddShot (shot);
-			}
-			if (he.Type == HeapEvent.EventType.Object) {
-				ObjectInfo ob = new ObjectInfo ();
-				ob.Code = currentObjBase + he.Object;
-				ob.Size = he.Size;
-				ob.RefsIndex = currentData.ReferenceCodes.Count;
-				ob.RefsCount = he.ObjectRefs != null ? he.ObjectRefs.Length : 0;
-				currentData.ObjectTypeCodes.Add (currentPtrBase + he.Class);
-				totalMemory += ob.Size;
-				if (ob.Size != 0)
-					currentData.RealObjectCount++;
+            //if (he.Type == HeapEvent.EventType.Start) {
+            //    //Console.WriteLine ("ppe: START");
+            //    return;
+            //}
+            //else if (he.Type == HeapEvent.EventType.End) {
+            //    //Console.WriteLine ("ppe: END");
+            //    HeapSnapshot shot = new HeapSnapshot ();
+            //    shotCount++;
+            //    shot.Build (shotCount.ToString (), currentData);
+            //    AddShot (shot);
+            //}
+            //if (he.Type == HeapEvent.EventType.Object) {
+            //    ObjectInfo ob = new ObjectInfo ();
+            //    ob.Code = currentObjBase + he.Object;
+            //    ob.Size = he.Size;
+            //    ob.RefsIndex = currentData.ReferenceCodes.Count;
+            //    ob.RefsCount = he.ObjectRefs != null ? he.ObjectRefs.Length : 0;
+            //    currentData.ObjectTypeCodes.Add (currentPtrBase + he.Class);
+            //    totalMemory += ob.Size;
+            //    if (ob.Size != 0)
+            //        currentData.RealObjectCount++;
 				
-				// Read referenceCodes
+            //    // Read referenceCodes
 				
-				ulong lastOff = 0;
-				for (int n=0; n < ob.RefsCount; n++) {
-					currentData.ReferenceCodes.Add (he.ObjectRefs [n] + currentObjBase);
-					lastOff += he.RelOffset [n];
-					currentData.FieldReferenceCodes.Add (lastOff);
-				}
-				currentData.ObjectsList.Add (ob);
-			}
-			else if (he.Type == HeapEvent.EventType.Root) {
-				for (int n=0; n<he.RootRefs.Length; n++) {
-					ObjectInfo ob = new ObjectInfo ();
-					ob.Size = 0;
-					ob.RefsIndex = currentData.ReferenceCodes.Count;
-					ob.RefsCount = 1;
-					long type = UnknownTypeId;
-					switch (he.RootRefTypes [n] & HeapEvent.RootType.TypeMask) {
-					case HeapEvent.RootType.Stack: type = StackObjectId; ob.Code = StackObjectId; break;
-					case HeapEvent.RootType.Finalizer: type = FinalizerObjectId; ob.Code = --rootId; break;
-					case HeapEvent.RootType.Handle: type = HandleObjectId; ob.Code = --rootId; break;
-					case HeapEvent.RootType.Other: type = OtherRootObjectId; ob.Code = --rootId; break;
-					case HeapEvent.RootType.Misc: type = MiscRootObjectId; ob.Code = --rootId; break;
-					default:
-						Console.WriteLine ("pp1:"); break;
-					}
-					currentData.ObjectTypeCodes.Add (type);
-					currentData.ReferenceCodes.Add (he.RootRefs [n] + currentObjBase);
-					currentData.FieldReferenceCodes.Add (0);
-					currentData.ObjectsList.Add (ob);
-					currentData.RealObjectCount++;
-				}
-			}
+            //    ulong lastOff = 0;
+            //    for (int n=0; n < ob.RefsCount; n++) {
+            //        currentData.ReferenceCodes.Add (he.ObjectRefs [n] + currentObjBase);
+            //        lastOff += he.RelOffset [n];
+            //        currentData.FieldReferenceCodes.Add (lastOff);
+            //    }
+            //    currentData.ObjectsList.Add (ob);
+            //}
+            //else if (he.Type == HeapEvent.EventType.Root) {
+            //    for (int n=0; n<he.RootRefs.Length; n++) {
+            //        ObjectInfo ob = new ObjectInfo ();
+            //        ob.Size = 0;
+            //        ob.RefsIndex = currentData.ReferenceCodes.Count;
+            //        ob.RefsCount = 1;
+            //        long type = UnknownTypeId;
+            //        switch (he.RootRefTypes [n] & HeapEvent.RootType.TypeMask) {
+            //        case HeapEvent.RootType.Stack: type = StackObjectId; ob.Code = StackObjectId; break;
+            //        case HeapEvent.RootType.Finalizer: type = FinalizerObjectId; ob.Code = --rootId; break;
+            //        case HeapEvent.RootType.Handle: type = HandleObjectId; ob.Code = --rootId; break;
+            //        case HeapEvent.RootType.Other: type = OtherRootObjectId; ob.Code = --rootId; break;
+            //        case HeapEvent.RootType.Misc: type = MiscRootObjectId; ob.Code = --rootId; break;
+            //        default:
+            //            Console.WriteLine ("pp1:"); break;
+            //        }
+            //        currentData.ObjectTypeCodes.Add (type);
+            //        currentData.ReferenceCodes.Add (he.RootRefs [n] + currentObjBase);
+            //        currentData.FieldReferenceCodes.Add (0);
+            //        currentData.ObjectsList.Add (ob);
+            //        currentData.RealObjectCount++;
+            //    }
+            //}
 		}
 		
 		void AddShot (HeapSnapshot shot)

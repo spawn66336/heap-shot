@@ -27,6 +27,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using MonoDevelop.Profiler;
 using HeapShot.Reader.Graphs;
+using MonoProfilerReaderBridge;
 
 namespace HeapShot.Reader {
 
@@ -47,8 +48,11 @@ namespace HeapShot.Reader {
 		int filteredCount;
 		long[] objectCodes;
 
-        bool isbuild = false; //是否已经构建
-		
+        public int  heapDataId = -1;                        //当前对象属于哪个堆截面
+        public MonoProfilerReaderBridge.HeapShot heapShot;  //堆快照对象
+        bool isbuild = false;                               //是否已经构建
+        
+
 /*
 		 * Here is a visual example of how tables are filled:
 		 * 
@@ -132,18 +136,101 @@ namespace HeapShot.Reader {
             }
         }
 		
+
+        //
+        public void PrepareData()
+        {
+
+            if (IsBuild)
+                return;
+
+            if( heapDataId < 0 )
+            {
+                Console.WriteLine("HeapSnapshot:"+name+" 的heapDataId异常，heapDataId="+heapDataId);
+                return;
+            }
+
+            MonoProfilerReaderBridge.HeapData heapData = heapShot.GetHeapDataByIndex((uint)heapDataId); 
+            //准备数据
+            heapData.PrepareData();
+             
+            //构建类表
+            Hashtable classMap = heapShot.GetClassTable();
+
+            List<TypeInfo> typeList = new List<TypeInfo>();
+            IDictionaryEnumerator classEnum = classMap.GetEnumerator();
+            classEnum.Reset();
+            while (classEnum.MoveNext())
+            {
+                DictionaryEntry dentry;
+                dentry = (DictionaryEntry)classEnum.Current;
+
+                MonoProfilerReaderBridge.ClassInfo classInfo = (MonoProfilerReaderBridge.ClassInfo)dentry.Value;
+                TypeInfo ti = new TypeInfo();
+                ti.Code = classInfo.GetID();
+                ti.Name = classInfo.GetName();
+                ti.FieldsIndex = 0;
+                ti.FieldsCount = 0;
+                typeList.Add(ti);
+            }
+
+            MonoProfilerReaderBridge.ObjectInfo obj = null;
+            HeapShotData currentData = new HeapShotData(); 
+            heapData.MoveFirstObject();
+            while ((obj = heapData.GetCurrObject()) != null)
+            {
+                    if (!classMap.ContainsKey(obj.GetClassID()))
+                    {
+                        classMap[obj.GetClassID()] = heapShot.GetClassInfoByID(obj.GetClassID());
+                    }
+
+                    ObjectInfo ob = new ObjectInfo();
+                    ob.Code = obj.GetID();
+                    ob.Size = obj.GetSize();
+                    ob.RefsIndex = currentData.ReferenceCodes.Count;
+                    ob.RefsCount = (int)obj.GetRefObjCount();
+                    currentData.ObjectTypeCodes.Add(obj.GetClassID()); 
+                    if (ob.Size != 0)
+                        currentData.RealObjectCount++;
+
+                    // Read referenceCodes 
+                    for (uint n = 0; n < ob.RefsCount; n++)
+                    {
+                        currentData.ReferenceCodes.Add((long)obj.GetRefObjIDByIndex(n));
+                    }
+                    currentData.ObjectsList.Add(ob);
+
+                    heapData.MoveNextObject();
+             }
+             
+             currentData.TypesList.AddRange(typeList);
+             
+             //构建截面数据
+             Build(currentData);
+
+             currentData.ResetHeapData();
+                
+             //构建完成标志位置位
+             isbuild = true;
+        }
+
+        public void ReleaseData()
+        {
+            MonoProfilerReaderBridge.HeapData heapData = heapShot.GetHeapDataByIndex((uint)heapDataId);
+             
+            heapData.ReleaseData();
+
+            isbuild = false;
+        }
+
 		//
 		// Code to read the log files generated at runtime
 		//
 
 		HashSet<long> types_not_found = new HashSet<long> ();
-		internal void Build (string name, HeapShotData data)
-		{
-            if (IsBuild)
-                return;
+		internal void Build (HeapShotData data)
+		{ 
 
-			this.name = name;
-			
 			//构建索引数组，并按TypeID来排序，这样
             //得到一个类型索引，每个索引索引一个
             //types中的类型，这样最终的typeIndices
@@ -308,8 +395,7 @@ namespace HeapShot.Reader {
 				}
 			}
 
-            //构建完成标志位置位
-            isbuild = true;
+            
 		}
 		
 		class RefComparer: IComparer <int> {
