@@ -144,6 +144,7 @@ namespace HeapShot.Gui.Widgets
 		{
 			entryFilter.Text = "";
 			store.Clear ();
+            file = null;
 		}
 		
 		public bool InverseReferences {

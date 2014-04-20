@@ -78,6 +78,16 @@ public partial class MainWindow: Gtk.Window
 				Reload (false);
 			}, null, 0, 500/*ms*/);
 		}
+
+        HeapShotUpdateManager.Instance.HeapSnapshotAdded +=  delegate (object o, HeapShotEventArgs args)
+            {
+			        Application.Invoke (
+                            delegate
+                            {
+                                viewer.AddSnapshot(args.HeapSnapshot);
+                            }
+                        );
+            };
 	}
 	
 	protected override void OnDestroyed ()
@@ -110,12 +120,16 @@ public partial class MainWindow: Gtk.Window
 			outfile = null;
 		}
 
+        //停止监控当前HeapShot文件
+        HeapShotUpdateManager.Instance.Clear();
+
         //清空数据
 		viewer.Clear ();
         //清空HeapShotMgr中的所有数据
         ObjectMapReader.ClearAllHeapShotData();
 		viewer.Sensitive = false;
 
+        //强制GC收集
         GC.Collect();
 	}
 	

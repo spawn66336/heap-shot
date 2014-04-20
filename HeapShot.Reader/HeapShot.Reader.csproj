@@ -44,6 +44,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="FieldInfo.cs" />
+    <Compile Include="HeapShotUpdateManager.cs" />
     <Compile Include="ObjectInfo.cs" />
     <Compile Include="ObjectMapFileReader.cs" />
     <Compile Include="ObjectReference.cs" />

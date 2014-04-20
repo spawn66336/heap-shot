@@ -37,6 +37,8 @@ namespace HeapShot.Gui.Widgets
 				notebook.Remove (notebook.Children [2]);
 			
 			baseMap = null;
+            //lastMap必需释放否则会出现内存泄漏
+            lastMap = null;
 			fileStore.Clear ();
 			allObjectsTree.Clear ();
 			notebook.Page = 0;

@@ -187,7 +187,10 @@ namespace HeapShot.Reader {
 
                 double prog = ((double)i) / ((double)heapShot.GetHeapDataCount());
                 progress.ReportProgress("ππΩ®∂—øÏ’’...", prog);
-            } 
+            }
+
+
+            HeapShotUpdateManager.Instance.heapShotRef = heapShot;
 		}
 
 		private void ReadLogFileChunk_Type (MetadataEvent t)
