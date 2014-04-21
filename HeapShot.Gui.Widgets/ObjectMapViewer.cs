@@ -121,13 +121,8 @@ namespace HeapShot.Gui.Widgets
 				return null;
 			
 			HeapSnapshot map = (HeapSnapshot) fileStore.GetValue (iter, 0);
-
-            if( !map.IsBuild )
-            {
-                map.PrepareData();
-            }
-
-
+            map.PrepareData(); 
+            
 			if (baseMap != null && baseMap != map)
 				return GetCombinedMap (map, baseMap);
 			else

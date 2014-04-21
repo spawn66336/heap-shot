@@ -180,15 +180,15 @@ namespace HeapShot.Reader {
                 HeapSnapshot shot = new HeapSnapshot();
                 shotCount++;
                 shot.name = shotCount.ToString();
-
                 shot.heapDataId = i;
                 shot.heapShot = heapShot;
+
+                HeapShotUpdateManager.Instance.AppendHeapSnapShot(shot);
                 AddShot(shot);
 
                 double prog = ((double)i) / ((double)heapShot.GetHeapDataCount());
                 progress.ReportProgress("ππΩ®∂—øÏ’’...", prog);
             }
-
 
             HeapShotUpdateManager.Instance.heapShotRef = heapShot;
 		}

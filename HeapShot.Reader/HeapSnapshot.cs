@@ -130,6 +130,10 @@ namespace HeapShot.Reader {
 
         public bool IsBuild
         {
+            set
+            {
+                isbuild = value;
+            }
             get
             {
                 return isbuild;
